@@ -17,15 +17,16 @@
     "tape": "^4.6.3"
   },
   "scripts": {
-    "build": "browserify -g ./node_modules/uglifyify exports.js > dist/threebox.min.js",
+    "build": "browserify -g ./node_modules/uglifyify exports.js > ../tb-demo-crude/dist/threebox.min.js",
     "dev": "watchify exports.js --verbose -o dist/threebox.js",
+    "dev2": "watchify exports.js --verbose -o ../tb-demo-crude/dist/threeboxSource.js",
     "test": "browserify tests/threebox-tests.js > tests/threebox-tests-bundle.js; echo 'Open tests/threebox-tests.html to run tests in the browser.'"
   },
   "dependencies": {
     "@turf/turf": "^5.1.6",
     "tape": "^4.10.1",
     "turf": "^3.0.14",
-    "watchify": "^3.11.1",
-    "uglifyify": "5.0.1"
+    "uglifyify": "^5.0.2",
+    "watchify": "^3.11.1"
   }
 }

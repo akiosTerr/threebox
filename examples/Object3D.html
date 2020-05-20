@@ -51,7 +51,9 @@ map.on('style.load', function() {
             );
 
             // initialize geometry and material of our cube object
-            var geometry = new THREE.BoxGeometry(200, 200, 200);
+            var geometry = new THREE.BoxGeometry(200, 500, 200);
+            console.log(geometry);
+            
 
             var redMaterial = new THREE.MeshPhongMaterial( {
                 color: 0x009900, 

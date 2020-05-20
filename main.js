@@ -1,4 +1,4 @@
 module.exports = exports = {
-    Threebox: require('./src/Threebox'),
-    THREE: require('./src/three.js')
-}
+	Threebox: require('./src/Threebox.js'),
+	THREE: require('./src/three.js')
+};
