@@ -1,4 +1,5 @@
 # `threebox`
+### custom version by akiosTerr*
 
 A three.js plugin for Mapbox GL JS, using the custom layer feature. Provides convenient methods to manage objects in lnglat coordinates, and to synchronize the map and scene cameras.
 
