@@ -102,28 +102,56 @@ AnimationManager.prototype = {
 			return this;
 		};
 
-		obj.followPath = function (options, cb) {
+		obj.followPathArray = function (options, cb) {
+			let worldPath = utils.lnglatsToWorld(options.path);
+			let path_curves = [];
+
+			for (let i = 0; i < worldPath.length - 1; i++) {
+				path_curves.push(new THREE.LineCurve3(worldPath[i], worldPath[i + 1]));
+			}
+
 			var entry = {
 				type: 'followPath',
 				parameters: utils._validate(options, defaults.followPath),
 			};
-			// console.log(`path lnglat: ${options.path}`);
-			let worldPath = utils.lnglatsToWorld(options.path);
-			worldPath.map((obj) => {
-				console.log(obj);
+
+			utils.extend(entry.parameters, {
+				pathCurve: path_curves,
+				dbCurves: path_curves,
+				start: Date.now(),
+				expiration: Date.now() + entry.parameters.duration,
+				cb: cb,
 			});
+
+			this.animationQueue.push(entry);
+
+			map.repaint = true;
+
+			return this;
+		};
+
+		obj.followPath = function (options, cb) {
+			let worldPath = utils.lnglatsToWorld(options.path);
+			//console.log(worldPath);
+			var path_curves = [];
+			for (let i = 0; i < worldPath.length - 1; i++) {
+				path_curves.push(new THREE.LineCurve3(worldPath[i], worldPath[i + 1]));
+			}
+
 			let curve1 = new THREE.CatmullRomCurve3(worldPath);
 			let curve2 = new THREE.CatmullRomCurve3(worldPath, false, 'chordal');
 			let curve3 = new THREE.CatmullRomCurve3(worldPath, false, 'catmullrom');
-			let lineCurve1 = new THREE.LineCurve3(worldPath[0], worldPath[1]);
-			let lineCurve2 = new THREE.LineCurve3(worldPath[1], worldPath[2]);
-			let pathLineCurve = [lineCurve1, lineCurve2];
 
-			let curves = [curve1, curve2, curve3];
+			let dbcurves = [curve1, curve2, curve3];
+
+			var entry = {
+				type: 'followPath',
+				parameters: utils._validate(options, defaults.followPath),
+			};
 
 			utils.extend(entry.parameters, {
-				pathCurve: curve1,
-				dbCurves: curves,
+				pathCurve: [curve2],
+				dbCurves: dbcurves,
 				start: Date.now(),
 				expiration: Date.now() + entry.parameters.duration,
 				cb: cb,
@@ -165,7 +193,6 @@ AnimationManager.prototype = {
 		if (this.previousFrameTime === undefined) this.previousFrameTime = now;
 		// console.log(now);
 		var dimensions = ['X', 'Y', 'Z'];
-		var colors = [0xff0000, 0x1eff00, 0x2600ff];
 
 		//iterate through objects in queue. count in reverse so we can cull objects without frame shifting
 		for (var a = this.enrolledObjects.length - 1; a >= 0; a--) {
@@ -177,28 +204,30 @@ AnimationManager.prototype = {
 			//focus on first item in queue
 			var item = object.animationQueue[0];
 			var options = item.parameters;
-			var curves = options.dbCurves;
+			var currentCurve = options.pathCurve[0];
+			if (options.dbCurves) {
+				var lines = utils.curvesToLines(options.dbCurves);
+			}
 
-			var lines = curves.map((curve, i) => {
-				let geometry = new THREE.BufferGeometry().setFromPoints(
-					curve.getPoints(50)
-				);
-				let material = new THREE.LineBasicMaterial({
-					color: colors[i],
-				});
-				let curveLine = new THREE.Line(geometry, material);
-				return curveLine;
-			});
+			options.cb(lines);
 
 			// if an animation is past its expiration date, cull it
 
 			if (!options.expiration) {
-				object.animationQueue.splice(0, 1);
-				console.log('splice animationQueue');
-				// set the start time of the next animation
-				if (object.animationQueue[0]) {
-					console.log('set the start');
-					object.animationQueue[0].parameters.start = now;
+				if (options.pathCurve.length > 1) {
+					options.pathCurve.splice(0, 1);
+					options.start = Date.now();
+					options.expiration = Date.now() + options.duration;
+
+					console.log('next curve');
+				} else {
+					object.animationQueue.splice(0, 1);
+					console.log('splice animationQueue');
+					// set the start time of the next animation
+					if (object.animationQueue[0]) {
+						console.log('set the start');
+						object.animationQueue[0].parameters.start = now;
+					}
 				}
 
 				return;
@@ -212,7 +241,6 @@ AnimationManager.prototype = {
 
 				options.expiration = false;
 				if (options.endState) object._setObject(options.endState);
-				options.cb(lines);
 			} else {
 				var timeProgress = (now - options.start) / options.duration;
 
@@ -249,16 +277,14 @@ AnimationManager.prototype = {
 				}
 
 				if (item.type === 'followPath') {
-					var position = options.pathCurve.getPointAt(timeProgress);
+					var position = currentCurve.getPointAt(timeProgress);
 
 					//position.z = _height;
 					objectState = { worldCoordinates: position };
 
 					// if we need to track heading
 					if (options.trackHeading) {
-						var tangent = options.pathCurve
-							.getTangentAt(timeProgress)
-							.normalize();
+						var tangent = currentCurve.getTangentAt(timeProgress).normalize();
 
 						var axis = new THREE.Vector3(0, 0, 0);
 						var up = new THREE.Vector3(0, 1, 0);

@@ -9,7 +9,7 @@ function loadObj(options, cb) {
 
 	this.loaded = false;
 
-	const modelComplete = m => {
+	const modelComplete = (m) => {
 		console.log('Model complete!', m);
 
 		if (--remaining === 0) this.loaded = true;
@@ -22,7 +22,7 @@ function loadObj(options, cb) {
 		options.mtl,
 		loadObject,
 		() => null,
-		error => {
+		(error) => {
 			console.warn('No material file found for SymbolLayer3D model ' + m);
 		}
 	);
@@ -35,10 +35,9 @@ function loadObj(options, cb) {
 
 		objLoader.load(
 			options.obj,
-			obj => {
+			(obj) => {
 				var r = utils.types.rotation(options, [0, 0, 0]);
 				var s = utils.types.scale(options, [1, 1, 1]);
-				console.log(s);
 
 				obj = obj.children[0];
 				obj.rotation.set(r[0] + Math.PI / 2, r[1] + Math.PI, r[2]);
@@ -55,7 +54,7 @@ function loadObj(options, cb) {
 				cb(userScaleGroup);
 			},
 			() => null,
-			error => {
+			(error) => {
 				console.error('Could not load model file.');
 			}
 		);

@@ -3,16 +3,31 @@ var Constants = require('./constants.js');
 var validate = require('./validate.js');
 
 var utils = {
-	prettyPrintMatrix: function(uglymatrix) {
+	curvesToLines: (curves) => {
+		var colors = [0xff0000, 0x1eff00, 0x2600ff];
+		var lines = curves.map((curve, i) => {
+			let geometry = new THREE.BufferGeometry().setFromPoints(
+				curve.getPoints(100)
+			);
+			let material = new THREE.LineBasicMaterial({
+				color: colors[i] || 'purple',
+			});
+			let curveLine = new THREE.Line(geometry, material);
+			return curveLine;
+		});
+		return lines;
+	},
+
+	prettyPrintMatrix: function (uglymatrix) {
 		for (var s = 0; s < 4; s++) {
 			var quartet = [
 				uglymatrix[s],
 				uglymatrix[s + 4],
 				uglymatrix[s + 8],
-				uglymatrix[s + 12]
+				uglymatrix[s + 12],
 			];
 			console.log(
-				quartet.map(function(num) {
+				quartet.map(function (num) {
 					return num.toFixed(4);
 				})
 			);
@@ -25,7 +40,7 @@ var utils = {
 				'%c' + label + '\n',
 				'background: yellow; color:black; font-size:large'
 			);
-			coord.map(item => {
+			coord.map((item) => {
 				console.log(item);
 			});
 		} else {
@@ -37,7 +52,7 @@ var utils = {
 		}
 	},
 
-	makePerspectiveMatrix: function(fovy, aspect, near, far) {
+	makePerspectiveMatrix: function (fovy, aspect, near, far) {
 		var out = new THREE.Matrix4();
 		var f = 1.0 / Math.tan(fovy / 2),
 			nf = 1 / (near - far);
@@ -58,7 +73,7 @@ var utils = {
 			0,
 			0,
 			2 * far * near * nf,
-			0
+			0,
 		];
 
 		out.elements = newMatrix;
@@ -66,7 +81,7 @@ var utils = {
 	},
 
 	//gimme radians
-	radify: function(deg) {
+	radify: function (deg) {
 		function convert(degrees) {
 			degrees = degrees || 0;
 			return (Math.PI * 2 * degrees) / 360;
@@ -75,7 +90,7 @@ var utils = {
 		if (typeof deg === 'object') {
 			//if [x,y,z] array of rotations
 			if (deg.length > 0) {
-				return deg.map(function(degree) {
+				return deg.map(function (degree) {
 					return convert(degree);
 				});
 			}
@@ -91,7 +106,7 @@ var utils = {
 	},
 
 	//gimme degrees
-	degreeify: function(rad) {
+	degreeify: function (rad) {
 		function convert(radians) {
 			radians = radians || 0;
 			return (radians * 360) / (Math.PI * 2);
@@ -102,7 +117,7 @@ var utils = {
 		} else return convert(rad);
 	},
 
-	projectToWorld: function(coords) {
+	projectToWorld: function (coords) {
 		// Spherical mercator forward projection, re-scaling to WORLD_SIZE
 
 		var projected = [
@@ -114,7 +129,7 @@ var utils = {
 				Math.log(
 					Math.tan(Math.PI * 0.25 + 0.5 * Constants.DEG2RAD * coords[1])
 				) *
-				Constants.PROJECTION_WORLD_SIZE
+				Constants.PROJECTION_WORLD_SIZE,
 		];
 
 		//z dimension, defaulting to 0 if not provided
@@ -130,7 +145,7 @@ var utils = {
 		return result;
 	},
 
-	projectedUnitsPerMeter: function(latitude) {
+	projectedUnitsPerMeter: function (latitude) {
 		return Math.abs(
 			Constants.WORLD_SIZE /
 				Math.cos(Constants.DEG2RAD * latitude) /
@@ -138,7 +153,7 @@ var utils = {
 		);
 	},
 
-	_scaleVerticesToMeters: function(centerLatLng, vertices) {
+	_scaleVerticesToMeters: function (centerLatLng, vertices) {
 		var pixelsPerMeter = this.projectedUnitsPerMeter(centerLatLng[1]);
 		var centerProjected = this.projectToWorld(centerLatLng);
 
@@ -149,18 +164,18 @@ var utils = {
 		return vertices;
 	},
 
-	projectToScreen: function(coords) {
+	projectToScreen: function (coords) {
 		console.log(
 			'WARNING: Projecting to screen coordinates is not yet implemented'
 		);
 	},
 
-	unprojectFromScreen: function(pixel) {
+	unprojectFromScreen: function (pixel) {
 		console.log('WARNING: unproject is not yet implemented');
 	},
 
 	//world units to lnglat
-	unprojectFromWorld: function(worldUnits) {
+	unprojectFromWorld: function (worldUnits) {
 		var unprojected = [
 			-worldUnits.x /
 				(Constants.MERCATOR_A *
@@ -174,7 +189,7 @@ var utils = {
 					)
 				) -
 					Math.PI / 4)) /
-				Constants.DEG2RAD
+				Constants.DEG2RAD,
 		];
 
 		var pixelsPerMeter = this.projectedUnitsPerMeter(unprojected[1]);
@@ -186,7 +201,7 @@ var utils = {
 		return unprojected;
 	},
 
-	_flipMaterialSides: function(obj) {},
+	_flipMaterialSides: function (obj) {},
 
 	// to improve precision, normalize a series of vector3's to their collective center, and move the resultant mesh to that center
 	normalizeVertices(vertices) {
@@ -200,7 +215,7 @@ var utils = {
 		var center = geometry.boundingSphere.center;
 		var radius = geometry.boundingSphere.radius;
 
-		var scaled = vertices.map(function(v3) {
+		var scaled = vertices.map(function (v3) {
 			var normalized = v3.sub(center);
 			return normalized;
 		});
@@ -219,8 +234,8 @@ var utils = {
 
 	//convert a line/polygon to Vector3's
 
-	lnglatsToWorld: function(coords) {
-		var vector3 = coords.map(function(pt) {
+	lnglatsToWorld: function (coords) {
+		var vector3 = coords.map(function (pt) {
 			var p = utils.projectToWorld(pt);
 			var v3 = new THREE.Vector3(p.x, p.y, p.z);
 			return v3;
@@ -229,11 +244,11 @@ var utils = {
 		return vector3;
 	},
 
-	extend: function(original, addition) {
+	extend: function (original, addition) {
 		for (key in addition) original[key] = addition[key];
 	},
 
-	clone: function(original) {
+	clone: function (original) {
 		var clone = {};
 		for (key in original) clone[key] = original[key];
 		return clone;
@@ -242,7 +257,7 @@ var utils = {
 	// retrieve object parameters from an options object
 
 	types: {
-		rotation: function(r, currentRotation) {
+		rotation: function (r, currentRotation) {
 			// if number provided, rotate only in Z by that amount
 			if (typeof r === 'number') r = { z: r };
 
@@ -251,23 +266,23 @@ var utils = {
 			return radians;
 		},
 
-		scale: function(s, currentScale) {
+		scale: function (s, currentScale) {
 			let n = s.scale;
 			if (typeof n === 'number') return (n = [n, n, n]);
 			else return this.applyDefault([s.x, s.y, s.z], currentScale);
 		},
 
-		applyDefault: function(array, current) {
-			var output = array.map(function(item, index) {
+		applyDefault: function (array, current) {
+			var output = array.map(function (item, index) {
 				item = item || current[index];
 				return item;
 			});
 
 			return output;
-		}
+		},
 	},
 
-	_validate: function(userInputs, defaults, debug = false) {
+	_validate: function (userInputs, defaults, debug = false) {
 		userInputs = userInputs || {};
 		var validatedOutput = {};
 		utils.extend(validatedOutput, userInputs);
@@ -291,8 +306,8 @@ var utils = {
 		'projectToWorld',
 		'projectedUnitsPerMeter',
 		'extend',
-		'unprojectFromWorld'
-	]
+		'unprojectFromWorld',
+	],
 };
 
 module.exports = exports = utils;
