@@ -5,14 +5,15 @@
 ## features:
 
 - ### Follow Path Array 
+a alternative to Follow Path function, 
+it follows a array of curves created from the coordinates instead of a single curve object.
 
 ![followpath](https://i.gyazo.com/7d0895d70609b0f92f37ca97f04704d8.gif)
 
 - ### Visualizing Curves
+a utility function that generates Three.js Lines from curve objects.
 
 ![curves](https://i.imgur.com/ToVKZmn.png)
-
-
 
 
 
