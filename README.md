@@ -1,8 +1,17 @@
 # `threebox`
+
+A three.js plugin for Mapbox GL JS, using the custom layer feature. Provides convenient methods to manage objects in lnglat coordinates, and to synchronize the map and scene cameras.
+
+<img alt="threebox" src="docs/gallery.jpg">
+
 ## `custom version by akiosTerr`
+
+![header](https://i.imgur.com/Vg653U2.png)
 
 
 ## features:
+
+
 
 - ### Follow Path Array 
 a alternative to Follow Path function, 
@@ -14,12 +23,6 @@ it follows a array of curves created from the coordinates instead of a single cu
 a utility function that generates Three.js Lines from curve objects.
 
 ![curves](https://i.imgur.com/ToVKZmn.png)
-
-
-
-A three.js plugin for Mapbox GL JS, using the custom layer feature. Provides convenient methods to manage objects in lnglat coordinates, and to synchronize the map and scene cameras.
-
-<img alt="threebox" src="docs/gallery.jpg">
 
 
 ### Compatibility/Dependencies
