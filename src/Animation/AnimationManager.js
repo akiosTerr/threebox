@@ -132,11 +132,6 @@ AnimationManager.prototype = {
 
 		obj.followPath = function (options, cb) {
 			let worldPath = utils.lnglatsToWorld(options.path);
-			//console.log(worldPath);
-			var path_curves = [];
-			for (let i = 0; i < worldPath.length - 1; i++) {
-				path_curves.push(new THREE.LineCurve3(worldPath[i], worldPath[i + 1]));
-			}
 
 			let curve1 = new THREE.CatmullRomCurve3(worldPath);
 			let curve2 = new THREE.CatmullRomCurve3(worldPath, false, 'chordal');
@@ -209,7 +204,7 @@ AnimationManager.prototype = {
 				var lines = utils.curvesToLines(options.dbCurves);
 			}
 
-			options.cb(lines);
+			options.cb({ label: 'lines', lines });
 
 			// if an animation is past its expiration date, cull it
 
@@ -221,6 +216,7 @@ AnimationManager.prototype = {
 
 					console.log('next curve');
 				} else {
+					options.cb({ label: 'cb' });
 					object.animationQueue.splice(0, 1);
 					console.log('splice animationQueue');
 					// set the start time of the next animation

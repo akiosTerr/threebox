@@ -3,17 +3,32 @@ var Constants = require('./constants.js');
 var validate = require('./validate.js');
 
 var utils = {
+	curveToLine: (curve, params) => {
+		let { width, color } = params;
+		let geometry = new THREE.BufferGeometry().setFromPoints(
+			curve.getPoints(100)
+		);
+
+		let material = new THREE.LineBasicMaterial({
+			color: color,
+			linewidth: width,
+		});
+
+		let line = new THREE.Line(geometry, material);
+
+		return line;
+	},
+
 	curvesToLines: (curves) => {
 		var colors = [0xff0000, 0x1eff00, 0x2600ff];
 		var lines = curves.map((curve, i) => {
-			let geometry = new THREE.BufferGeometry().setFromPoints(
-				curve.getPoints(100)
-			);
-			let material = new THREE.LineBasicMaterial({
+			let params = {
+				width: 3,
 				color: colors[i] || 'purple',
-			});
-			let curveLine = new THREE.Line(geometry, material);
-			return curveLine;
+			};
+			let curveline = curveToLine(curve, params);
+
+			return curveline;
 		});
 		return lines;
 	},
@@ -309,5 +324,6 @@ var utils = {
 		'unprojectFromWorld',
 	],
 };
+var curveToLine = utils.curveToLine;
 
 module.exports = exports = utils;
